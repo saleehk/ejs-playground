@@ -3,7 +3,7 @@
 @import url(https://fonts.googleapis.com/css?family=Cutive+Mono);
 
 .row {
-    height: 100vh;
+    height: 50vh;
 }
 
 body {
@@ -11,7 +11,11 @@ body {
 }
 
 #editor {
-    height: 100vh;
+    height: 50vh;
+}
+#editor-vars {
+    height: 49vh;
+    border-bottom: 5px solid ;
 }
 
 .col-result {
