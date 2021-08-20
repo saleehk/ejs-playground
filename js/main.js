@@ -8,7 +8,7 @@ const parseTemplate = ({ template, data }) => {
         if (typeof currentItem === 'string') {
             currentItem = currentItem.replace(new RegExp('{{', 'g'), '<%-');
             currentItem = currentItem.replace(new RegExp('}}', 'g'), '%>');
-            outPutData[item] = ejs.render(currentItem, data);
+            outPutData[item] = ejs.render(currentItem, data, { outputFunctionName: 'echo' });
             /**
              * Bad code; Need a lot of optimization
              */
