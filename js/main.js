@@ -1,38 +1,47 @@
+var $result = document.getElementById("result");
+
 const parseTemplate = ({ template, data }) => {
     const outPutData = { ...template };
     const attributeKeys = Object.keys(outPutData);
     attributeKeys.map((item) => {
         let currentItem = outPutData[item];
-        try {
-            if (typeof currentItem === 'string') {
-                currentItem = currentItem.replace(new RegExp('{{', 'g'), '<%-');
-                currentItem = currentItem.replace(new RegExp('}}', 'g'), '%>');
+        if (typeof currentItem === 'string') {
+            currentItem = currentItem.replace(new RegExp('{{', 'g'), '<%-');
+            currentItem = currentItem.replace(new RegExp('}}', 'g'), '%>');
+            outPutData[item] = ejs.render(currentItem, data);
+            /**
+             * Bad code; Need a lot of optimization
+             */
+            if (outPutData[item].match(/object Object/)) {
+                currentItem = currentItem.replace('<%-', '<%- JSON.stringify(');
+                currentItem = currentItem.replace('%>', ')%>');
                 outPutData[item] = ejs.render(currentItem, data);
-                /**
-                 * Bad code; Need a lot of optimization
-                 */
-                if (outPutData[item].match(/object Object/)) {
-                    currentItem = currentItem.replace('<%-', '<%- JSON.stringify(');
-                    currentItem = currentItem.replace('%>', ')%>');
-                    outPutData[item] = ejs.render(currentItem, data);
-                }
-                if (currentItem.match('JSON.stringify')) {
-                    outPutData[item] = JSON.parse(outPutData[item]);
-                }
-            } else if (typeof currentItem === 'object') {
-                const out = parse({ template: currentItem, data });
-                outPutData[item] = out;
             }
-        } catch (error) {
-            // console.log(error);
+            if (currentItem.match('JSON.stringify')) {
+                outPutData[item] = JSON.parse(outPutData[item]);
+            }
+        } else if (typeof currentItem === 'object') {
+            const out = parse({ template: currentItem, data });
+            outPutData[item] = out;
         }
+
         return null;
     });
     return outPutData;
 };
+function setResult(result, sucess) {
+    if (sucess)
+        $result.parentNode.style.background = "#27ae60";
+    else
+        $result.parentNode.style.background = "#c0392b";
+    if (/html/.test(location.search)) {
+        $result.innerHTML = result;
+    } else {
+        $result.textContent = result;
+    }
+}
 (function () {
 
-    var $result = document.getElementById("result");
 
     function update() {
         var result = null
@@ -48,18 +57,14 @@ const parseTemplate = ({ template, data }) => {
             result = `${JSON.stringify(templateResp)}`;
             console.log(result);
             // result = result.replace(/\n/g, "\\\\n").replace(/\r/g, "\\\\r").replace(/\t/g, "\\\\t");
-
-            $result.parentNode.style.background = "#27ae60";
+            setResult(result, true);
         } catch (e) {
             result = e.stack;
-            $result.parentNode.style.background = "#c0392b";
+            setResult(result, false);
+
         }
 
-        if (/html/.test(location.search)) {
-            $result.innerHTML = result;
-        } else {
-            $result.textContent = result;
-        }
+
     }
     const variables = { blockData: {}, blockItem: {} }
     const editorVars = ace.edit("editor-vars");
@@ -68,9 +73,9 @@ const parseTemplate = ({ template, data }) => {
         JSON.stringify(variables, null, 2), -1);
 
     editorVars.on("change", () => {
-        const input = editorVars.getValue()
-            ;
+        const input = editorVars.getValue();
         localStorage.setItem('data-vars', input);
+        update()
     });
 
     editorVars.setTheme("ace/theme/monokai");
